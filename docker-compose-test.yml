@@ -1,0 +1,45 @@
+version: '3'
+
+# These are the "services" that you need to run your test suite
+# It is kept full isolated from the development flow
+# This allows for easier CI as you only need be able to set up this context
+# If running locally, it does share the gem and spring volumes
+services:
+  test: &app_base
+    image: ${CONTAINER_TAG:-dynaer/dqbdb-api:master}
+    env_file: .env.test
+    environment:
+      - DATABASE_URL=postgres://postgres:R0tate1@test-pg/dqbdb-api_test
+    volumes:
+      - ${PWD}:/app:cached
+      - dbqdb-api-gems:/usr/local/bundle
+      - dqbdb-api-spring:/tmp/spring-0
+
+  # Because you should care about security
+  brakeman:
+    <<: *app_base
+    command: brakeman -o brakeman-output.html
+
+  # Because we all have opinions about code
+  rubocop:
+    <<: *app_base
+    command: rubocop -f html -o rubocop.html
+
+  spring:
+    <<: *app_base
+    command: spring server
+
+  test-pg:
+    image: postgres:10.3
+    environment:
+      - POSTGRES_PASSWORD=R0tate1
+      - POSTGRES_DB=dqbdb-api_test
+    volumes:
+      - dqbdb-api-test-data:/var/lib/postgresql/data
+
+volumes:
+  dqbdb-api-gems:
+    external: true
+  dqbdb-apiE-test-data:
+    external: true
+  dqbdb-api-spring:
