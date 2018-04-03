@@ -1,0 +1,36 @@
+version: '3'
+
+networks:
+  default:
+    external:
+      name: local_dev
+
+services:
+  base: &app_base
+    image: dynaer/dqbdb-api:develop
+    env_file: .env
+    volumes:
+      - .:/app
+      - dqbdb-api-gems:/usr/local/bundle
+      - dqbdb-api-spring:/tmp/spring-0
+    tty: true
+    stdin_open: true
+
+  web:
+    <<: *app_base
+    ports:
+      - "8001:80"
+    networks:
+      default:
+        aliases:
+          - dqbdb-api
+
+  spring:
+    <<: *app_base
+    command: spring server
+
+volumes:
+  dqbdb-api-gems:
+    external: true
+  dqbdb-api-spring:
+    external: true
