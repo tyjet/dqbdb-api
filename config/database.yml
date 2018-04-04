@@ -19,6 +19,7 @@ default: &default
   connect_timeout: 1
   encoding: unicode
   host: <%= ENV.fetch("DB_HOST") %>
+  password: <%= ENV.fetch("DB_PASSWORD") %> 
   # For details on connection pooling, see rails configuration guide
   # http://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>

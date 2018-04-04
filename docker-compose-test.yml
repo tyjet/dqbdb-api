@@ -9,7 +9,9 @@ services:
     image: ${CONTAINER_TAG:-dynaer/dqbdb-api:master}
     env_file: .env.test
     environment:
-      - DATABASE_URL=postgres://postgres:R0tate1@test-pg/dqbdb-api_test
+      - DB_HOST=postgres
+      - DB_PASSWORD=R0tate1TesT
+      - DB_USER=test
     volumes:
       - ${PWD}:/app:cached
       - dbqdb-api-gems:/usr/local/bundle
@@ -32,7 +34,8 @@ services:
   test-pg:
     image: postgres:10.3
     environment:
-      - POSTGRES_PASSWORD=R0tate1
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=R0tate1TesT
       - POSTGRES_DB=dqbdb-api_test
     volumes:
       - dqbdb-api-test-data:/var/lib/postgresql/data
