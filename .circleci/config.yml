@@ -91,17 +91,13 @@ workflows:
   version: 2
   build-test-and-lint:
     jobs:
-      - build:
-          context: org-global
+      - build
       - test:
-          context: org-global
           requires:
             - build
       - brakeman:
-          context: org-global
           requires:
             - build
       - rubocop:
-          context: org-global
           requires:
             - build
