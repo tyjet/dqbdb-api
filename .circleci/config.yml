@@ -12,7 +12,8 @@ jobs:
     docker:
       - image: docker:stable-git
     environment:
-      - DOCKER_REPOSITORY: 'quay.io/wework/discounts'
+      - COMPOSE_FILE: 'docker-compose.test.yml'
+      - DOCKER_REPOSITORY: 'dynaer/dqbdb-api'
     steps:
       - checkout
       - setup_remote_docker
@@ -21,25 +22,38 @@ jobs:
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Docker build
-          command: docker build -t dynaer/dqbdb-api:$CIRCLE_BRANCH .
+          command: docker build . -t dynaer/dqbdb-api:$(echo $CIRCLE_BRANCH | sed "s|/|-|")
       - run:
           name: Docker push
-          command: docker push dynaer/dqbdb-api:$CIRCLE_BRANCH
+          command: docker push dynaer/dqbdb-api:$(echo $CIRCLE_BRANCH | sed "s|/|-|")
   test:
     machine:
       image: circleci/classic:201711-01
     environment:
       - COMPOSE_FILE: 'docker-compose.test.yml'
-      - DOCKER_REGISTRY: 'quay.io/wework'
-      - DOCKER_REPOSITORY: 'quay.io/wework/discounts'
+      - DOCKER_REPOSITORY: 'dynaer/dqbdb-api'
     steps:
       - checkout
       - run:
           name: Setup
-          command: script/ci/setup
+          command: |
+            [ -z "$DEBUG" ] || set -x
+            set -x
+            docker network create local_dev 2>/dev/null || true
+            docker volume rm dqbdb-api-gems 2>/dev/null || true
+            docker volume create --name=dqbdb-api-gems 2>/dev/null
+            export CONTAINER_NAME=dynaer/dqbdb-api:$(echo $CIRCLE_BRANCH | sed "s|/|-|")
+            docker-compose pull --ignore-pull-failures
+            docker-cmpose run test bundle install
+            docker-compose up -d --no-recreate test-pg 2> /dev/null
+            docker-compose run test rails db:setup
       - run:
-          name: CITest
-          command: script/test
+          name: Test
+          command: |
+            [ -z "$DEBUG" ] || set -x
+            export CONTAINER_NAME=$dynaer/dqbdb-api:$(echo $CIRCLE_BRANCH | sed "s|/|-|")
+            docker-compose up -d spring
+            docker-compose run test rspec
 
   brakeman:
     machine:
