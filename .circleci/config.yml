@@ -90,18 +90,24 @@ jobs:
           path: gemsurance_report.html
 
   deploy_production:
-    working_directory: /app
     environment:
       - HEROKU_APP_NAME: dqbdb-api
+      - HEROKU_REGISTRY: registry.heroku.com
     docker:
-      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
+      - image: docker:stable-git
     steps:
+      - setup_remote_docker
       - run:
-          name: Setup Heroku
-          command: bash .circleci/setup-heroku.sh
+          name: Docker Login
+          command: docker login --username=_ --password=$HEROKU_AUTH_TOKEN $HEROKU_REGISTRY
       - run:
-          name: Deploy (Production)
-          command: heroku container:push web -a $HEROKU_APP_NAME
+          name: Docker Pull
+          command: docker pull dynaer/dqbdb-api:test-$CIRCLE_SHA1
+      - run:
+          name: Docker Push Production
+          command: |
+            docker tag dynaer/dqbdb-api:test-$CIRCLE_SHA1 $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
+            docker push $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
 
   deploy_staging:
     environment:
@@ -118,7 +124,7 @@ jobs:
           name: Docker Pull
           command: docker pull dynaer/dqbdb-api:test-$CIRCLE_SHA1
       - run:
-          name: Docker Push
+          name: Docker Push Staging
           command: |
             docker tag dynaer/dqbdb-api:test-$CIRCLE_SHA1 $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
             docker push $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
@@ -152,6 +158,11 @@ workflows:
             - brakeman
             - rubocop
             - gemsurance
+          filters:
+            branches:
+              only:
+                - master
+                - staging
       - deploy_production:
           context: org-global
           requires:
