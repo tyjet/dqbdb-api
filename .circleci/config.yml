@@ -113,7 +113,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Docker Login
-          command: docker login -u $DOCKER_USER -p $DOCKER_PASS
+          command: docker login --username=_ --password=$HEROKU_AUTH_TOKEN $HEROKU_REGISTRY
       - run:
           name: Docker Pull
           command: docker pull dynaer/dqbdb-api:test-$CIRCLE_SHA1
