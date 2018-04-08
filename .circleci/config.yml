@@ -96,18 +96,17 @@ jobs:
     docker:
       - image: docker:stable-git
     steps:
+      - checkout
       - setup_remote_docker
       - run:
           name: Docker Login
           command: docker login --username=_ --password=$HEROKU_AUTH_TOKEN $HEROKU_REGISTRY
       - run:
-          name: Docker Pull
-          command: docker pull dynaer/dqbdb-api:test-$CIRCLE_SHA1
+          name: Docker Build Production
+          command: docker build . -t $HEROKU_REGISTRY/$HEROKU_APP_NAME/web --build-arg GEM_GROUPS="development test staging"
       - run:
           name: Docker Push Production
-          command: |
-            docker tag dynaer/dqbdb-api:test-$CIRCLE_SHA1 $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
-            docker push $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
+          command: docker push $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
 
   deploy_staging:
     environment:
@@ -116,18 +115,17 @@ jobs:
     docker:
       - image: docker:stable-git
     steps:
+      - checkout
       - setup_remote_docker
       - run:
           name: Docker Login
           command: docker login --username=_ --password=$HEROKU_AUTH_TOKEN $HEROKU_REGISTRY
       - run:
-          name: Docker Pull
-          command: docker pull dynaer/dqbdb-api:test-$CIRCLE_SHA1
+          name: Docker Build Staging
+          command: docker build . -t $HEROKU_REGISTRY/$HEROKU_APP_NAME/web --build-arg GEM_GROUPS="development test"
       - run:
           name: Docker Push Staging
-          command: |
-            docker tag dynaer/dqbdb-api:test-$CIRCLE_SHA1 $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
-            docker push $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
+          command: docker push $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
 
 workflows:
   version: 2
