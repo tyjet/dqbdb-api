@@ -48,7 +48,9 @@ jobs:
     steps:
       - run:
           name: Brakeman
-          command: brakeman -q -o brakeman.html
+          command: |
+            ls
+            brakeman -q -o brakeman.html
       - store_artifacts:
           path: brakeman.html
 
