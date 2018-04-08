@@ -44,7 +44,7 @@ jobs:
 
   brakeman:
     docker:
-      image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
     steps:
       - run:
           name: Brakeman
@@ -54,7 +54,7 @@ jobs:
 
   rubocop:
     docker:
-      image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
     steps:
       - run:
           name: Rubocop
@@ -64,7 +64,7 @@ jobs:
 
   gemsurance:
     docker:
-      image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
     steps:
       - run:
         name: Gemsurance
