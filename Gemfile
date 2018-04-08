@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 source 'https://rubygems.org'
 
 ruby '2.5.1'
@@ -5,7 +7,6 @@ ruby '2.5.1'
 gem 'pg'
 gem 'puma'
 gem 'rails'
-
 
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 # gem 'jbuilder', '~> 2.5'
@@ -23,7 +24,6 @@ gem 'rails'
 group :development, :test do
   gem 'awesome_print'
   gem 'brakeman'
-  gem 'bundler-audit'
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
   gem 'dotenv-rails'
@@ -43,5 +43,4 @@ end
 group :test do
   gem 'database_cleaner'
   gem 'factory_bot_rails'
-  gem 'spring-commands-rspec'
 end
