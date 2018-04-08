@@ -27,6 +27,7 @@ jobs:
           name: Docker Push
           command: docker push dynaer/dqbdb-api:test-$CIRCLE_SHA1
   test:
+    working_directory: ~/app
     docker:
       - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
         environment:
@@ -43,21 +44,19 @@ jobs:
           command: rails test
 
   brakeman:
+    working_directory: ~/app
     docker:
       - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
     steps:
       - run:
           name: Brakeman
-          command: |
-            ls
-            pwd
-            cd ../..
-            ls
+          command:
             brakeman -q -o brakeman.html
       - store_artifacts:
           path: brakeman.html
 
   rubocop:
+    working_directory: ~/app
     docker:
       - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
     steps:
@@ -68,6 +67,7 @@ jobs:
           path: rubocop.html
 
   gemsurance:
+    working_directory: ~/app
     docker:
       - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
     steps:
