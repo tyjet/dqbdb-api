@@ -1,0 +1,175 @@
+# Ruby CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-ruby/ for more details
+#
+# To check docker images:
+#   https://circleci.com/docs/2.0/circleci-images/
+#   https://hub.docker.com/r/circleci/ruby/tags/ - more up to date
+
+version: 2
+jobs:
+  build:
+    docker:
+      - image: docker:stable-git
+    environment:
+      - DOCKER_REPOSITORY: dynaer/dqbdb-api
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Docker Login
+          command: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
+          name: Docker Build
+          command: docker build . -t $DOCKER_REPOSITORY:test-$CIRCLE_SHA1 --build-arg GEM_GROUPS="development staging production "
+      - run:
+          name: Docker Push
+          command: docker push $DOCKER_REPOSITORY:test-$CIRCLE_SHA1
+  test:
+    working_directory: /app
+    docker:
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
+        environment:
+          RAILS_ENV: test
+          RACK_ENV: test
+          DATABASE_URL: postgres://test_user@localhost:5432/dqbdb_api_test
+      - image: circleci/postgres:10.3
+        environment:
+          POSTGRES_USER: test_user
+          POSTGRES_DB: dqbdb_api_test
+    steps:
+      - run:
+          name: Install Dockerize
+          command: |
+            wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+            tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+            rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: Wait For Database
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: Setup
+          command: rails db:setup db:test:prepare
+      - run:
+          name: Test
+          command: rails test
+
+  brakeman:
+    working_directory: /app
+    docker:
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
+    steps:
+      - run:
+          name: Brakeman
+          command: brakeman -q -o brakeman.html
+      - store_artifacts:
+          path: brakeman.html
+
+  rubocop:
+    working_directory: /app
+    docker:
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
+    steps:
+      - run:
+          name: Rubocop
+          command: rubocop -o rubocop.html
+      - store_artifacts:
+          path: rubocop.html
+
+  gemsurance:
+    working_directory: /app
+    docker:
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
+    steps:
+      - run:
+          name: Gemsurance
+          command: gemsurance
+      - store_artifacts:
+          path: gemsurance_report.html
+
+  deploy_production:
+    environment:
+      - HEROKU_APP_NAME: dqbdb-api
+      - HEROKU_REGISTRY: registry.heroku.com
+    docker:
+      - image: docker:stable-git
+    steps:
+      - setup_remote_docker
+      - run:
+          name: Docker Login
+          command: docker login --username=_ --password=$HEROKU_AUTH_TOKEN $HEROKU_REGISTRY
+      - run:
+          name: Docker Pull
+          command: docker pull dynaer/dqbdb-api:test-$CIRCLE_SHA1
+      - run:
+          name: Docker Push Production
+          command: |
+            docker tag dynaer/dqbdb-api:test-$CIRCLE_SHA1 $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
+            docker push $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
+
+  deploy_staging:
+    environment:
+      - HEROKU_APP_NAME: dqbdb-api-staging
+      - HEROKU_REGISTRY: registry.heroku.com
+    docker:
+      - image: docker:stable-git
+    steps:
+      - setup_remote_docker
+      - run:
+          name: Docker Login
+          command: docker login --username=_ --password=$HEROKU_AUTH_TOKEN $HEROKU_REGISTRY
+      - run:
+          name: Docker Pull
+          command: docker pull dynaer/dqbdb-api:test-$CIRCLE_SHA1
+      - run:
+          name: Docker Push Staging
+          command: |
+            docker tag dynaer/dqbdb-api:test-$CIRCLE_SHA1 $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
+            docker push $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
+
+workflows:
+  version: 2
+  build-test-and-lint:
+    jobs:
+      - build:
+          context: org-global
+      - test:
+          context: org-global
+          requires:
+            - build
+      - brakeman:
+          context: org-global
+          requires:
+            - build
+      - rubocop:
+          context: org-global
+          requires:
+            - build
+      - gemsurance:
+          context: org-global
+          requires:
+            - build
+      - deploy_staging:
+          context: org-global
+          requires:
+            - test
+            - brakeman
+            - rubocop
+            - gemsurance
+          filters:
+            branches:
+              only:
+                - master
+                - staging
+      - deploy_production:
+          context: org-global
+          requires:
+            - test
+            - brakeman
+            - rubocop
+            - gemsurance
+          filters:
+            branches:
+              only: master
