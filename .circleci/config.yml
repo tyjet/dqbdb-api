@@ -84,7 +84,7 @@ jobs:
     environment:
       - HEROKU_APP_NAME: dqbdb-api
     docker:
-      -image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
     steps:
       - run:
           name: Setup Heroku
@@ -98,7 +98,7 @@ jobs:
     environment:
       - HEROKU_APP_NAME: dqbdb-api-staging
     docker:
-      -image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
     steps:
       - run:
           name: Setup Heroku
