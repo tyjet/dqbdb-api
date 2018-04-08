@@ -23,7 +23,6 @@ gem 'rails'
 group :development, :test do
   gem 'awesome_print'
   gem 'brakeman'
-  gem 'bundler-audit'
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
   gem 'dotenv-rails'
@@ -43,5 +42,4 @@ end
 group :test do
   gem 'database_cleaner'
   gem 'factory_bot_rails'
-  gem 'spring-commands-rspec'
 end
