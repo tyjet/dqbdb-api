@@ -10,6 +10,8 @@ machine api.heroku.com
   password $HEROKU_API_KEY
 EOF
 
+chmod 600 ~/.netrc
+
 mkdir ~/.ssh
 touch ~/.ssh/config
 

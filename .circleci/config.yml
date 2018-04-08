@@ -111,11 +111,11 @@ jobs:
       - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
     steps:
       - run:
+          name: Setup Docker
+          command: curl -fsSL get.docker.com | sh
+      - run:
           name: Setup Heroku
           command: bash .circleci/setup-heroku.sh
-      # - run:
-      #     name: Docker Login
-      #     command: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Deploy (Staging)
           command: |
