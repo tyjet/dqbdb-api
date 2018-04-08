@@ -18,8 +18,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Docker Login
-          command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
+          command: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Docker Build
           command: docker build . -t dynaer/dqbdb-api:test-$CIRCLE_SHA1 --build-arg GEM_GROUPS="development staging production "
@@ -115,8 +114,12 @@ jobs:
           name: Setup Heroku
           command: bash .circleci/setup-heroku.sh
       - run:
-          name: Deploy (Production)
+          name: Docker Login
+          command: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
+          name: Deploy (Staging)
           command: |
+            heroku login
             heroku container:login
             heroku container:push web -a $HEROKU_APP_NAME
 
