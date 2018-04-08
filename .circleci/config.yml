@@ -13,7 +13,6 @@ jobs:
       - image: docker:stable-git
     environment:
       - DOCKER_REPOSITORY: 'dynaer/dqbdb-api'
-      - CONTAINER_NAME: $DOCKER_REPOSITORY:test-$CIRCLE_PR_NUMBER
     steps:
       - checkout
       - setup_remote_docker
@@ -22,13 +21,13 @@ jobs:
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
           name: Docker Build
-          command: docker build . -t dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+          command: docker build . -t dynaer/dqbdb-api:test-$(echo $CIRCLE_PR_NUMBER) --build-arg GEM_GROUPS="development staging production"
       - run:
           name: Docker Push
-          command: docker push dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+          command: docker push dynaer/dqbdb-api:test-$(echo $CIRCLE_PR_NUMBER)
   test:
     docker:
-      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+      - image: dynaer/dqbdb-api:$CIRCLE_PR_NUMBER-test
         environment:
           RAILS_ENV: test
           RACK_ENV: test
