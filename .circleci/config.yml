@@ -50,7 +50,16 @@ jobs:
     steps:
       - run:
           name: Brakeman
-          command:
+          command: |
+            pwd
+            ls
+            cd ..
+            pwd
+            ls
+            cd ..
+            ls
+            cd app
+            ls
             brakeman -q -o brakeman.html
       - store_artifacts:
           path: brakeman.html
