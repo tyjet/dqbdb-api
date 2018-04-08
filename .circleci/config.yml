@@ -106,6 +106,7 @@ jobs:
   deploy_staging:
     environment:
       - HEROKU_APP_NAME: dqbdb-api-staging
+      - HEROKU_REGISTRY: registry.heroku.com
     docker:
       - image: docker:stable-git
     steps:
@@ -118,7 +119,9 @@ jobs:
           command: docker pull dynaer/dqbdb-api:test-$CIRCLE_SHA1
       - run:
           name: Docker Push
-          command: docker push registry.heroku.com/dqbdb-api-staging/web
+          command: |
+            docker tag dynaer/dqbdb-api:test-$CIRCLE_SHA1 $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
+            docker push $HEROKU_REGISTRY/$HEROKU_APP_NAME/web
 
 workflows:
   version: 2
