@@ -49,7 +49,7 @@ jobs:
       - run:
           name: Brakeman
           command: |
-            ls
+            echo ls
             brakeman -q -o brakeman.html
       - store_artifacts:
           path: brakeman.html
