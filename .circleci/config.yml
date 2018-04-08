@@ -40,6 +40,9 @@ jobs:
           POSTGRES_DB: dqbdb_api_test
     steps:
       - run:
+          name: Setup
+          command: rails db:setup db:test:prepare
+      - run:
           name: Test
           command: rails test
 
@@ -50,17 +53,7 @@ jobs:
     steps:
       - run:
           name: Brakeman
-          command: |
-            pwd
-            ls
-            cd ..
-            pwd
-            ls
-            cd ..
-            ls
-            cd app
-            ls
-            brakeman -q -o brakeman.html
+          command: brakeman -q -o brakeman.html
       - store_artifacts:
           path: brakeman.html
 
