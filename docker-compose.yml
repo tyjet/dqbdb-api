@@ -19,7 +19,7 @@ services:
   web:
     <<: *app_base
     ports:
-      - "8001:80"
+      - "4414:80"
     networks:
       default:
         aliases:
