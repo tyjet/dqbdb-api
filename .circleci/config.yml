@@ -79,7 +79,7 @@ jobs:
       - store_artifacts:
           path: gemsurance_report.html
 
-  deploy_prod:
+  deploy_production:
     working_directory: /app
     environment:
       - HEROKU_APP_NAME: dqbdb-api
@@ -138,3 +138,13 @@ workflows:
             - brakeman
             - rubocop
             - gemsurance
+      - deploy_production:
+          context: org-global
+          requires:
+            - test
+            - brakeman
+            - rubocop
+            - gemsurance
+          filters:
+            branches:
+              only: master
