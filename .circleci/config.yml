@@ -79,6 +79,34 @@ jobs:
       - store_artifacts:
           path: gemsurance_report.html
 
+  deploy_prod:
+    working_directory: /app
+    environment:
+      - HEROKU_APP_NAME: dqbdb-api
+    docker:
+      -image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
+    steps:
+      - run:
+          name: Setup Heroku
+          command: bash .circleci/setup-heroku.sh
+      - run:
+          name: Deploy (Production)
+          command: heroku container:push web -a $HEROKU_APP_NAME
+
+  deploy_staging:
+    working_directory: /app
+    environment:
+      - HEROKU_APP_NAME: dqbdb-api-staging
+    docker:
+      -image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
+    steps:
+      - run:
+          name: Setup Heroku
+          command: bash .circleci/setup-heroku.sh
+      - run:
+          name: Deploy (Production)
+          command: heroku container:push web -a $HEROKU_APP_NAME
+
 workflows:
   version: 2
   build-test-and-lint:
@@ -101,3 +129,10 @@ workflows:
           context: org-global
           requires:
             - build
+      - deploy_staging:
+          context: org-global
+          requires:
+            - test
+            - brakeman
+            - rubocop
+            - gemsurance
