@@ -113,12 +113,12 @@ jobs:
     steps:
       - run:
           name: Setup Heroku
-          command: |
-            bash .circleci/setup-heroku.sh
-            heroku plugins:install heroku-container-tools
+          command: bash .circleci/setup-heroku.sh
       - run:
           name: Deploy (Production)
-          command: heroku container:push web -a $HEROKU_APP_NAME
+          command: |
+          heroku container:login
+          heroku container:push web -a $HEROKU_APP_NAME
 
 workflows:
   version: 2
