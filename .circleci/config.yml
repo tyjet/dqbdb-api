@@ -49,7 +49,9 @@ jobs:
       - run:
           name: Brakeman
           command: |
-            echo ls
+            pwd
+            cd ..
+            ls
             brakeman -q -o brakeman.html
       - store_artifacts:
           path: brakeman.html
