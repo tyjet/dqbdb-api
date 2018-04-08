@@ -1,7 +1,6 @@
 AllCops:
   Exclude:
-    - 'bin/setup'
-    - 'bin/update'
+    - 'bin/**/*'
     - 'tmp/**/*'
 
 Metrics/LineLength:
