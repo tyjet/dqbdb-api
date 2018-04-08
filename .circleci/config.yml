@@ -12,94 +12,65 @@ jobs:
     docker:
       - image: docker:stable-git
     environment:
-      - COMPOSE_FILE: 'docker-compose.test.yml'
       - DOCKER_REPOSITORY: 'dynaer/dqbdb-api'
+      - CONTAINER_NAME: $DOCKER_REPOSITORY:test-$CIRCLE_PR_NUMBER
     steps:
       - checkout
       - setup_remote_docker
       - run:
-          name: Docker login
+          name: Docker Login
           command: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - run:
-          name: Docker build
-          command: docker build . -t dynaer/dqbdb-api:$(echo $CIRCLE_BRANCH | sed "s|/|-|")
+          name: Docker Build
+          command: docker build . -t dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
       - run:
-          name: Docker push
-          command: docker push dynaer/dqbdb-api:$(echo $CIRCLE_BRANCH | sed "s|/|-|")
+          name: Docker Push
+          command: docker push dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
   test:
-    machine:
-      image: circleci/classic:201711-01
-    environment:
-      - COMPOSE_FILE: 'docker-compose.test.yml'
-      - DOCKER_REPOSITORY: 'dynaer/dqbdb-api'
+    docker:
+      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+        environment:
+          RAILS_ENV: test
+          RACK_ENV: test
+          DATABASE_URL: postgres://test_user@localhost:5432/dqbdb_api_test
+      - image: circleci/postgres:10.3
+        environment:
+          POSTGRES_USER: test_user
+          POSTGRES_DB: dqbdb_api_test
     steps:
-      - checkout
-      - run:
-          name: Setup
-          command: |
-            [ -z "$DEBUG" ] || set -x
-            set -x
-            docker network create local_dev 2>/dev/null || true
-            docker volume rm dqbdb-api-gems 2>/dev/null || true
-            docker volume create --name=dqbdb-api-gems 2>/dev/null
-            export CONTAINER_NAME=dynaer/dqbdb-api:$(echo $CIRCLE_BRANCH | sed "s|/|-|")
-            docker-compose pull --ignore-pull-failures
-            docker-cmpose run test bundle install
-            docker-compose up -d --no-recreate test-pg 2> /dev/null
-            docker-compose run test rails db:setup
       - run:
           name: Test
-          command: |
-            [ -z "$DEBUG" ] || set -x
-            export CONTAINER_NAME=$dynaer/dqbdb-api:$(echo $CIRCLE_BRANCH | sed "s|/|-|")
-            docker-compose up -d spring
-            docker-compose run test rspec
+          command: rails test
 
   brakeman:
-    machine:
-      image: circleci/classic:201711-01
-    environment:
-      - COMPOSE_FILE: 'docker-compose.test.yml'
-      - DOCKER_REPOSITORY: 'dynaer/dqbdb-api'
+    docker:
+      image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
     steps:
-      - checkout
-      - run:
-          name: Setup
-          command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker volume create --name=dqbdb-api-gems
-            docker volume create --name=dqbdb-api-spring
-            docker-compose pull test-pg test
-            docker-compose run test bundle install --with test
-            docker-compose up -d spring
       - run:
           name: Brakeman
-          command: docker-compose run brakeman
+          command: brakeman -q -o brakeman.html
       - store_artifacts:
-          path: brakeman-output.html
+          path: brakeman.html
 
   rubocop:
-    machine:
-      image: circleci/classic:201711-01
-    environment:
-      - COMPOSE_FILE: 'docker-compose.test.yml'
-      - DOCKER_REPOSITORY: 'dynaer/dqbdb-api'
+    docker:
+      image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
     steps:
-      - checkout
-      - run:
-          name: Setup
-          command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker volume create --name=dqbdb-api-gems
-            docker volume create --name=dqbdb-api-spring
-            docker-compose pull test-pg test
-            docker-compose run test bundle install --with test
-            docker-compose up -d spring
       - run:
           name: Rubocop
-          command: docker-compose run rubocop
+          command: rubocop -o rubocop.html
       - store_artifacts:
           path: rubocop.html
+
+  gemsurance:
+    docker:
+      image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+    steps:
+      - run:
+        name: Gemsurance
+        command: gemsurance
+      - store_artifacts:
+          path: gemsurance_report.html
 
 workflows:
   version: 2
@@ -116,6 +87,10 @@ workflows:
           requires:
             - build
       - rubocop:
+          context: org-global
+          requires:
+            - build
+      - gemsurance:
           context: org-global
           requires:
             - build
