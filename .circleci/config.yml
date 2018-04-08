@@ -20,17 +20,15 @@ jobs:
           name: Docker Login
           command: |
             docker login -u $DOCKER_USER -p $DOCKER_PASS
-            echo $CIRCLE_PR_NUMBER
-            printenv
       - run:
           name: Docker Build
-          command: docker build . -t dynaer/dqbdb-api:test-$(echo $CIRCLE_PR_NUMBER) --build-arg GEM_GROUPS="development staging production "
+          command: docker build . -t dynaer/dqbdb-api:test-$CIRCLE_SHA1 --build-arg GEM_GROUPS="development staging production "
       - run:
           name: Docker Push
-          command: docker push dynaer/dqbdb-api:test-$(echo $CIRCLE_PR_NUMBER)
+          command: docker push dynaer/dqbdb-api:test-$CIRCLE_SHA1
   test:
     docker:
-      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER-test
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
         environment:
           RAILS_ENV: test
           RACK_ENV: test
@@ -46,7 +44,7 @@ jobs:
 
   brakeman:
     docker:
-      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
     steps:
       - run:
           name: Brakeman
@@ -56,7 +54,7 @@ jobs:
 
   rubocop:
     docker:
-      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
     steps:
       - run:
           name: Rubocop
@@ -66,7 +64,7 @@ jobs:
 
   gemsurance:
     docker:
-      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
+      - image: dynaer/dqbdb-api:test-$CIRCLE_SHA1
     steps:
       - run:
           name: Gemsurance
