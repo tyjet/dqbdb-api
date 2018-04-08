@@ -18,16 +18,19 @@ jobs:
       - setup_remote_docker
       - run:
           name: Docker Login
-          command: docker login -u $DOCKER_USER -p $DOCKER_PASS
+          command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            echo $CIRCLE_PR_NUMBER
+            printenv
       - run:
           name: Docker Build
-          command: docker build . -t dynaer/dqbdb-api:test-$(echo $CIRCLE_PR_NUMBER) --build-arg GEM_GROUPS="development staging production"
+          command: docker build . -t dynaer/dqbdb-api:test-$(echo $CIRCLE_PR_NUMBER) --build-arg GEM_GROUPS="development staging production "
       - run:
           name: Docker Push
           command: docker push dynaer/dqbdb-api:test-$(echo $CIRCLE_PR_NUMBER)
   test:
     docker:
-      - image: dynaer/dqbdb-api:$CIRCLE_PR_NUMBER-test
+      - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER-test
         environment:
           RAILS_ENV: test
           RACK_ENV: test
@@ -66,8 +69,8 @@ jobs:
       - image: dynaer/dqbdb-api:test-$CIRCLE_PR_NUMBER
     steps:
       - run:
-        name: Gemsurance
-        command: gemsurance
+          name: Gemsurance
+          command: gemsurance
       - store_artifacts:
           path: gemsurance_report.html
 
